@@ -44,4 +44,23 @@ public class LlmClient(IChatClient chatClient, string systemPrompt)
 
         return default;
     }
+
+    public async Task<TAction?> DecideAsync<TAction>(string prompt) where TAction : struct, Enum
+    {
+        var choices = Enum.GetNames<TAction>();
+        var decision = await GenerateStructuredAsync<Decision>(
+            $"""
+             {prompt}
+
+             You must choose exactly one of the following options: {string.Join(", ", choices.Select(c => $"\"{c}\""))}
+             """);
+
+        if (decision is null) return null;
+        if (Enum.TryParse<TAction>(decision.Choice, ignoreCase: true, out var result))
+            return result;
+
+        return null;
+    }
+
+    private record Decision(string Choice);
 }
