@@ -6,11 +6,13 @@ using System.Text;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+var systemPrompt = File.ReadAllText("system_prompt.txt");
+
 var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 IChatClient chatClient = openAiKey is not null
     ? new OpenAI.Chat.ChatClient("gpt-4o-mini", openAiKey).AsIChatClient()
     : new OllamaApiClient(new Uri("http://localhost:11434"), "qwen3.5:9b");
-var llm = new LlmClient(chatClient);
+var llm = new LlmClient(chatClient, systemPrompt);
 
 while (true)
 {
