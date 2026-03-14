@@ -14,23 +14,26 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
     {
         _state.Reset(goal);
 
-        var plan = await _planner.CreatePlanAsync(goal, memory);
+        var graph = await _planner.CreateAotGraphAsync(goal, memory);
 
-        if (plan is not null && plan.Steps.Count > 0)
+        if (graph is not null && graph.Nodes.Count > 0)
         {
-            var validation = await _planner.ValidatePlanAsync(plan, tools);
+            var validation = _planner.ValidateAotGraph(graph);
 
             if (!validation.IsValid)
             {
-                onEvent(AgentEvent.Error($"Plan validation failed:\n{string.Join("\n", validation.Issues.Select(i => $"- {i}"))}"));
+                onEvent(AgentEvent.Error($"Graph validation failed:\n{string.Join("\n", validation.Issues.Select(i => $"- {i}"))}"));
                 memory.Save();
                 return;
             }
 
-            onEvent(AgentEvent.Plan(string.Join("\n", plan.Steps.Select((s, i) => $"{i + 1}. {s}"))));
+            var planText = string.Join("\n", graph.Nodes.Select(n =>
+                n.DependsOn.Count == 0
+                    ? $"{n.Id}. {n.Action}"
+                    : $"{n.Id}. {n.Action} (after: {string.Join(", ", n.DependsOn)})"));
+            onEvent(AgentEvent.Plan(planText));
 
-            foreach (var step in plan.Steps)
-                await ExecutePlanStepAsync(step, onEvent);
+            await ExecuteAotGraphAsync(graph, onEvent);
         }
         else
         {
@@ -38,6 +41,35 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
         }
 
         memory.Save();
+    }
+
+    private async Task ExecuteAotGraphAsync(AotGraph graph, Action<AgentEvent> onEvent)
+    {
+        var completed = new HashSet<string>();
+        var remaining = graph.Nodes.ToList();
+
+        while (remaining.Count > 0)
+        {
+            // Find all nodes whose dependencies are satisfied
+            var ready = remaining
+                .Where(n => n.DependsOn.All(dep => completed.Contains(dep)))
+                .ToList();
+
+            if (ready.Count == 0)
+            {
+                onEvent(AgentEvent.Error("Could not resolve execution order — possible cycle or missing dependency."));
+                break;
+            }
+
+            // Execute ready nodes in parallel
+            await Task.WhenAll(ready.Select(node => ExecutePlanStepAsync(node.Action, onEvent)));
+
+            foreach (var node in ready)
+            {
+                completed.Add(node.Id);
+                remaining.Remove(node);
+            }
+        }
     }
 
     // For plan steps: convert to a single atomic action and execute directly
