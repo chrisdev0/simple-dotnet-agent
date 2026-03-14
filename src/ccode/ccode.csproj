@@ -8,8 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="system_prompt.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="logger.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.4.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.4.0" />
+    <PackageReference Include="OllamaSharp" Version="5.4.23" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
   </ItemGroup>
 
