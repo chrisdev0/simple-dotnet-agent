@@ -12,7 +12,7 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
 
     public async Task RunAsync(string goal, Action<AgentEvent> onEvent, int maxSteps = 10)
     {
-        _state.Reset();
+        _state.Reset(goal);
 
         var plan = await _planner.CreatePlanAsync(goal, memory);
 
@@ -30,19 +30,53 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
             onEvent(AgentEvent.Plan(string.Join("\n", plan.Steps.Select((s, i) => $"{i + 1}. {s}"))));
 
             foreach (var step in plan.Steps)
-                await ExecuteStepAsync(step, onEvent, maxSteps);
+                await ExecutePlanStepAsync(step, onEvent);
         }
         else
         {
-            await ExecuteStepAsync(goal, onEvent, maxSteps);
+            await ExecuteDecideLoopAsync(goal, onEvent, maxSteps);
         }
 
         memory.Save();
     }
 
-    private async Task ExecuteStepAsync(string goal, Action<AgentEvent> onEvent, int maxSteps)
+    // For plan steps: convert to a single atomic action and execute directly
+    private async Task ExecutePlanStepAsync(string step, Action<AgentEvent> onEvent)
     {
         _state.ResetForNextStep();
+
+        var action = await _planner.CreateAtomicActionAsync(step, _state.Goal ?? step, tools, memory);
+
+        if (action is null)
+        {
+            onEvent(AgentEvent.Error($"Could not resolve step to a tool call: {step}"));
+            return;
+        }
+
+        var tool = tools.FirstOrDefault(t => t.Name.Equals(action.Tool, StringComparison.OrdinalIgnoreCase));
+        if (tool is null)
+        {
+            onEvent(AgentEvent.Error($"Unknown tool '{action.Tool}' for step: {step}"));
+            return;
+        }
+
+        var missingArgs = tool.Parameters
+            .Where(p => p.Required && !action.Arguments.ContainsKey(p.Name))
+            .Select(p => p.Name)
+            .ToList();
+
+        if (missingArgs.Count > 0)
+        {
+            onEvent(AgentEvent.Error($"Missing required arguments for {tool.Name}: {string.Join(", ", missingArgs)}"));
+            return;
+        }
+
+        await ExecuteToolAsync(tool, action.Arguments, onEvent);
+    }
+
+    // For unplanned goals: full decide loop
+    private async Task ExecuteDecideLoopAsync(string goal, Action<AgentEvent> onEvent, int maxSteps)
+    {
         string? previousResult = null;
         var repeatedCount = 0;
 
@@ -55,7 +89,7 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
                 repeatedCount++;
                 if (repeatedCount >= 2)
                 {
-                    onEvent(AgentEvent.Error($"Stuck in loop on step: {goal}. Aborting."));
+                    onEvent(AgentEvent.Error($"Stuck in loop on: {goal}. Aborting."));
                     _state.MarkDone();
                     break;
                 }
@@ -70,7 +104,7 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
             var action = await llm.DecideAsync<AgentAction>(AgentPrompts.Decide(goal, _state, memory));
 
             if (action == AgentAction.UseTool)
-                await ExecuteToolStepAsync(goal, onEvent);
+                await ExecuteToolDecisionAsync(goal, onEvent);
             else if (action is null or AgentAction.Respond)
                 await RespondAsync(goal, onEvent);
             else if (action == AgentAction.Done)
@@ -78,7 +112,7 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
         }
     }
 
-    private async Task ExecuteToolStepAsync(string goal, Action<AgentEvent> onEvent)
+    private async Task ExecuteToolDecisionAsync(string goal, Action<AgentEvent> onEvent)
     {
         var toolCall = await llm.RequestToolAsync(AgentPrompts.SelectTool(goal, _state, memory), tools);
 
@@ -95,12 +129,17 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
             return;
         }
 
-        var argsDisplay = string.Join(", ", toolCall.Arguments.Select(a => $"{a.Key}: {a.Value}"));
+        await ExecuteToolAsync(tool, toolCall.Arguments, onEvent);
+    }
+
+    private async Task ExecuteToolAsync(ITool tool, Dictionary<string, string> arguments, Action<AgentEvent> onEvent)
+    {
+        var argsDisplay = string.Join(", ", arguments.Select(a => $"{a.Key}: {a.Value}"));
         onEvent(AgentEvent.ToolCall($"{tool.Name}({argsDisplay})"));
 
         var timer = AgentLogger.StartTimer();
-        var result = await tool.ExecuteAsync(toolCall.Arguments);
-        logger.LogToolCall(tool.Name, toolCall.Arguments, result, timer.Elapsed.TotalMilliseconds);
+        var result = await tool.ExecuteAsync(arguments);
+        logger.LogToolCall(tool.Name, arguments, result, timer.Elapsed.TotalMilliseconds);
 
         var summary = $"{tool.Name}({argsDisplay}) → {result}";
         _state.SetLastResult(summary);

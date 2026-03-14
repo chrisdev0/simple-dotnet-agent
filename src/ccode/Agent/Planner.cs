@@ -80,6 +80,30 @@ public class Planner(LlmClient llm)
         return new PlanValidationResult(result.IsValid, issues);
     }
 
+    public async Task<AtomicAction?> CreateAtomicActionAsync(string step, string originalGoal, IReadOnlyList<ITool> availableTools, Memory memory)
+    {
+        var toolDescriptions = string.Join("\n", availableTools.Select(t =>
+            $"- {t.Name}: {t.Description}\n" +
+            string.Join("\n", t.Parameters.Select(p =>
+                $"    {p.Name} ({(p.Required ? "required" : "optional")}): {p.Description}"))));
+
+        return await llm.GenerateStructuredAsync<AtomicAction>(
+            $"""
+             Memory:
+             {memory.GetContext()}
+
+             Original goal: {originalGoal}
+             Step to execute: {step}
+
+             Available tools:
+             {toolDescriptions}
+
+             Convert this step into a single tool call with all required arguments.
+             All content must be relevant to the original goal — do not invent unrelated content.
+             Choose the most appropriate tool and provide all necessary arguments.
+             """);
+    }
+
     private record PlanResult(List<string> Steps);
     private record ValidationResult(bool IsValid, List<string> Issues);
 }

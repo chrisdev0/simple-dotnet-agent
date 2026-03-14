@@ -4,6 +4,8 @@ public record ToolParameter(string Name, string Description, bool Required = tru
 
 public record ToolCall(string Tool, Dictionary<string, string> Arguments);
 
+public record AtomicAction(string Tool, Dictionary<string, string> Arguments);
+
 public interface ITool
 {
     string Name { get; }
