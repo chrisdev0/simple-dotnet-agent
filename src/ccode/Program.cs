@@ -1,4 +1,16 @@
+using ccode.Shared;
+using Microsoft.Extensions.AI;
+using OllamaSharp;
 using Spectre.Console;
+using System.Text;
+
+Console.OutputEncoding = Encoding.UTF8;
+
+var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+IChatClient chatClient = openAiKey is not null
+    ? new OpenAI.Chat.ChatClient("gpt-4o-mini", openAiKey).AsIChatClient()
+    : new OllamaApiClient(new Uri("http://localhost:11434"), "qwen3.5:9b");
+var llm = new LlmClient(chatClient);
 
 while (true)
 {
@@ -12,6 +24,11 @@ while (true)
     if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
         break;
 
-    AnsiConsole.MarkupLine("[blue]Agent:[/] No functionality has been implemented yet.");
+    var response = await AnsiConsole.Status()
+        .Spinner(Spinner.Known.Dots8)
+        .StartAsync("Thinking...", _ => llm.GenerateAsync(input));
+
+    AnsiConsole.MarkupLine("[blue]Agent:[/]");
+    MarkdownRenderer.Render(response);
     AnsiConsole.WriteLine();
 }
