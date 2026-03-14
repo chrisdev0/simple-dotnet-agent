@@ -22,23 +22,55 @@ The original repository teaches how AI agents work by building one progressively
 - **TUI** — Spectre.Console + Markdig
 - **Serialization** — System.Text.Json
 
-## Lessons
+## Learning path
 
-Each lesson is a branch that builds on the previous one.
+Each lesson lives on its own branch and builds directly on the previous one. You can follow the lessons as a step-by-step guide for building an agent from scratch, or jump to any branch to see the full working code at that stage.
 
-| Branch | Lesson |
-|---|---|
-| `lesson-01` | Basic LLM chat — `LlmClient` wrapping `IChatClient`, Spectre.Console loop |
-| `lesson-02` | System prompt — loaded from `system_prompt.txt`, no recompile needed |
-| `lesson-03` | Structured output — `GenerateStructuredAsync<T>` with JSON schema + retry |
-| `lesson-04` | Decision making — `DecideAsync<TEnum>` constrained to any enum type |
-| `lesson-05` | Tools — `ITool` interface + ReadFile, WriteFile, ListFiles, RunCommand, SearchFiles, SearchInFiles, MoveFile, CreateDirectory, GetWorkingDirectory |
-| `lesson-06` | Agent loop — observe → decide → act with event callbacks |
-| `lesson-07` | Memory — persistent facts across steps and sessions, cache-friendly prompt ordering |
-| `lesson-08` | Logging — structured JSONL file sink + TUI sink, configurable via `logger.json` |
-| `lesson-09` | Planning — AoT graph generation with structural + LLM validation, loop detection |
-| `lesson-10` | Atomic actions — each plan step resolved to a single validated tool call |
-| `lesson-11` | Atom of Thought — dependency graph with parallel execution and cycle detection |
+### How to follow along
+
+```bash
+# Start at the beginning
+git checkout lesson-01
+dotnet run --project src/ccode
+
+# Move to the next lesson when you're ready
+git checkout lesson-02
+```
+
+Each lesson has a dedicated README in the `lessons/` directory explaining what was introduced, the key concepts, and which files changed. Read it before or after you look at the diff:
+
+```bash
+# See what changed between lessons
+git diff lesson-01..lesson-02
+
+# Read the lesson notes
+cat lessons/lesson-02.md
+```
+
+To implement a lesson yourself instead of reading the solution, branch off the previous lesson and compare your result to the lesson branch when you're done:
+
+```bash
+git checkout lesson-03
+git checkout -b lesson-04-attempt
+# implement lesson 04 yourself...
+git diff lesson-04  # compare with the reference solution
+```
+
+### Lessons
+
+| Branch | What's built | `lessons/` notes |
+|---|---|---|
+| `lesson-01` | Basic LLM chat — `LlmClient`, Spectre.Console loop, OpenAI/Ollama provider selection | [lesson-01.md](lessons/lesson-01.md) |
+| `lesson-02` | System prompt loaded from file | [lesson-02.md](lessons/lesson-02.md) |
+| `lesson-03` | Structured output — `GenerateStructuredAsync<T>` with JSON schema + retry | [lesson-03.md](lessons/lesson-03.md) |
+| `lesson-04` | Decision making — `DecideAsync<TEnum>` constrained to any enum type | [lesson-04.md](lessons/lesson-04.md) |
+| `lesson-05` | Tools — `ITool` interface + 9 built-in tools | [lesson-05.md](lessons/lesson-05.md) |
+| `lesson-06` | Agent loop — observe → decide → act with event callbacks | [lesson-06.md](lessons/lesson-06.md) |
+| `lesson-07` | Memory — persistent facts, cache-friendly prompt ordering | [lesson-07.md](lessons/lesson-07.md) |
+| `lesson-08` | Structured logging — JSONL file sink + TUI sink | [lesson-08.md](lessons/lesson-08.md) |
+| `lesson-09` | Planning — multi-step plan with structural + LLM validation | [lesson-09.md](lessons/lesson-09.md) |
+| `lesson-10` | Atomic actions — each plan step resolved to a single tool call | [lesson-10.md](lessons/lesson-10.md) |
+| `lesson-11` | Atom of Thought — dependency graph with parallel execution | [lesson-11.md](lessons/lesson-11.md) |
 
 ## Running
 
