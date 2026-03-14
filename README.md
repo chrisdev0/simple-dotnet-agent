@@ -60,17 +60,17 @@ git diff lesson-04  # compare with the reference solution
 
 | Branch | What's built | `lessons/` notes |
 |---|---|---|
-| `lesson-01` | Basic LLM chat — `LlmClient`, Spectre.Console loop, OpenAI/Ollama provider selection | [lesson-01.md](lessons/lesson-01.md) |
-| `lesson-02` | System prompt loaded from file | [lesson-02.md](lessons/lesson-02.md) |
-| `lesson-03` | Structured output — `GenerateStructuredAsync<T>` with JSON schema + retry | [lesson-03.md](lessons/lesson-03.md) |
-| `lesson-04` | Decision making — `DecideAsync<TEnum>` constrained to any enum type | [lesson-04.md](lessons/lesson-04.md) |
-| `lesson-05` | Tools — `ITool` interface + 9 built-in tools | [lesson-05.md](lessons/lesson-05.md) |
-| `lesson-06` | Agent loop — observe → decide → act with event callbacks | [lesson-06.md](lessons/lesson-06.md) |
-| `lesson-07` | Memory — persistent facts, cache-friendly prompt ordering | [lesson-07.md](lessons/lesson-07.md) |
-| `lesson-08` | Structured logging — JSONL file sink + TUI sink | [lesson-08.md](lessons/lesson-08.md) |
-| `lesson-09` | Planning — multi-step plan with structural + LLM validation | [lesson-09.md](lessons/lesson-09.md) |
-| `lesson-10` | Atomic actions — each plan step resolved to a single tool call | [lesson-10.md](lessons/lesson-10.md) |
-| `lesson-11` | Atom of Thought — dependency graph with parallel execution | [lesson-11.md](lessons/lesson-11.md) |
+| [`lesson-01`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-01) | Basic LLM chat — `LlmClient`, Spectre.Console loop, OpenAI/Ollama provider selection | [lesson-01.md](lessons/lesson-01.md) |
+| [`lesson-02`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-02) | System prompt loaded from file | [lesson-02.md](lessons/lesson-02.md) |
+| [`lesson-03`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-03) | Structured output — `GenerateStructuredAsync<T>` with JSON schema + retry | [lesson-03.md](lessons/lesson-03.md) |
+| [`lesson-04`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-04) | Decision making — `DecideAsync<TEnum>` constrained to any enum type | [lesson-04.md](lessons/lesson-04.md) |
+| [`lesson-05`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-05) | Tools — `ITool` interface + 9 built-in tools | [lesson-05.md](lessons/lesson-05.md) |
+| [`lesson-06`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-06) | Agent loop — observe → decide → act with event callbacks | [lesson-06.md](lessons/lesson-06.md) |
+| [`lesson-07`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-07) | Memory — persistent facts, cache-friendly prompt ordering | [lesson-07.md](lessons/lesson-07.md) |
+| [`lesson-08`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-08) | Structured logging — JSONL file sink + TUI sink | [lesson-08.md](lessons/lesson-08.md) |
+| [`lesson-09`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-09) | Planning — multi-step plan with structural + LLM validation | [lesson-09.md](lessons/lesson-09.md) |
+| [`lesson-10`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-10) | Atomic actions — each plan step resolved to a single tool call | [lesson-10.md](lessons/lesson-10.md) |
+| [`lesson-11`](https://github.com/chrisdev0/simple-dotnet-agent/tree/lesson-11) | Atom of Thought — dependency graph with parallel execution | [lesson-11.md](lessons/lesson-11.md) |
 
 ## Running
 
