@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "dgSpecHash": "U9z7Hl7xXXo=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\elers\\RiderProjects\\ccode\\src\\ccode\\ccode.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.ai\\10.4.0\\microsoft.extensions.ai.10.4.0.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.ai.abstractions\\10.4.0\\microsoft.extensions.ai.abstractions.10.4.0.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.ai.openai\\10.4.0\\microsoft.extensions.ai.openai.10.4.0.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.4\\microsoft.extensions.caching.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.2\\microsoft.extensions.configuration.abstractions.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.4\\microsoft.extensions.dependencyinjection.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.diagnostics.abstractions\\10.0.2\\microsoft.extensions.diagnostics.abstractions.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\10.0.2\\microsoft.extensions.fileproviders.abstractions.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\10.0.2\\microsoft.extensions.hosting.abstractions.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.4\\microsoft.extensions.logging.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.options\\10.0.2\\microsoft.extensions.options.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.4\\microsoft.extensions.primitives.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\openai\\2.9.1\\openai.2.9.1.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\spectre.console\\0.54.0\\spectre.console.0.54.0.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.clientmodel\\1.9.0\\system.clientmodel.1.9.0.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.4\\system.diagnostics.diagnosticsource.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.io.pipelines\\10.0.4\\system.io.pipelines.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.memory.data\\10.0.1\\system.memory.data.10.0.1.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.net.serversentevents\\10.0.2\\system.net.serversentevents.10.0.2.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.numerics.tensors\\10.0.4\\system.numerics.tensors.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.text.encodings.web\\10.0.4\\system.text.encodings.web.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.text.json\\10.0.4\\system.text.json.10.0.4.nupkg.sha512",
+    "C:\\Users\\elers\\.nuget\\packages\\system.threading.channels\\10.0.4\\system.threading.channels.10.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}
