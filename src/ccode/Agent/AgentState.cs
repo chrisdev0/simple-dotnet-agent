@@ -16,6 +16,12 @@ public class AgentState
         LastResult = null;
     }
 
+    public void ResetForNextStep()
+    {
+        Steps = 0;
+        Done = false;
+    }
+
     public string GetContext() =>
         $"Step {Steps}. Last result: {LastResult ?? "none"}";
 }

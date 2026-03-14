@@ -64,6 +64,13 @@ void RenderEvent(AgentEvent e)
 {
     switch (e.Type)
     {
+        case AgentEventType.Plan:
+            var panel = new Panel(e.Content)
+                .Header("[yellow]Plan[/]")
+                .BorderColor(Color.Yellow);
+            AnsiConsole.Write(panel);
+            AnsiConsole.WriteLine();
+            break;
         case AgentEventType.ToolCall:
             AnsiConsole.MarkupLine($"[grey]⚙ {Markup.Escape(e.Content)}[/]");
             break;

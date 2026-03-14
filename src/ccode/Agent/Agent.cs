@@ -8,14 +8,64 @@ public enum AgentAction { UseTool, Respond, Done }
 public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, AgentLogger logger)
 {
     private readonly AgentState _state = new();
+    private readonly Planner _planner = new(llm);
 
     public async Task RunAsync(string goal, Action<AgentEvent> onEvent, int maxSteps = 10)
     {
         _state.Reset();
 
+        var plan = await _planner.CreatePlanAsync(goal, memory);
+
+        if (plan is not null && plan.Steps.Count > 0)
+        {
+            var validation = await _planner.ValidatePlanAsync(plan, tools);
+
+            if (!validation.IsValid)
+            {
+                onEvent(AgentEvent.Error($"Plan validation failed:\n{string.Join("\n", validation.Issues.Select(i => $"- {i}"))}"));
+                memory.Save();
+                return;
+            }
+
+            onEvent(AgentEvent.Plan(string.Join("\n", plan.Steps.Select((s, i) => $"{i + 1}. {s}"))));
+
+            foreach (var step in plan.Steps)
+                await ExecuteStepAsync(step, onEvent, maxSteps);
+        }
+        else
+        {
+            await ExecuteStepAsync(goal, onEvent, maxSteps);
+        }
+
+        memory.Save();
+    }
+
+    private async Task ExecuteStepAsync(string goal, Action<AgentEvent> onEvent, int maxSteps)
+    {
+        _state.ResetForNextStep();
+        string? previousResult = null;
+        var repeatedCount = 0;
+
         while (!_state.Done && _state.Steps < maxSteps)
         {
             _state.IncrementStep();
+
+            if (_state.LastResult == previousResult && previousResult is not null)
+            {
+                repeatedCount++;
+                if (repeatedCount >= 2)
+                {
+                    onEvent(AgentEvent.Error($"Stuck in loop on step: {goal}. Aborting."));
+                    _state.MarkDone();
+                    break;
+                }
+            }
+            else
+            {
+                repeatedCount = 0;
+            }
+
+            previousResult = _state.LastResult;
 
             var action = await llm.DecideAsync<AgentAction>(AgentPrompts.Decide(goal, _state, memory));
 
@@ -26,8 +76,6 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
             else if (action == AgentAction.Done)
                 _state.MarkDone();
         }
-
-        memory.Save();
     }
 
     private async Task ExecuteToolStepAsync(string goal, Action<AgentEvent> onEvent)
@@ -53,7 +101,12 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, Age
         var timer = AgentLogger.StartTimer();
         var result = await tool.ExecuteAsync(toolCall.Arguments);
         logger.LogToolCall(tool.Name, toolCall.Arguments, result, timer.Elapsed.TotalMilliseconds);
-        _state.SetLastResult($"{tool.Name} → {result}");
+
+        var summary = $"{tool.Name}({argsDisplay}) → {result}";
+        _state.SetLastResult(summary);
+        memory.Add(summary.Length > 200 ? summary[..200] + "…" : summary);
+        logger.LogMemory("add", summary);
+
         onEvent(AgentEvent.ToolResult(result));
     }
 
