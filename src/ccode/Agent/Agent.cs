@@ -4,7 +4,7 @@ namespace ccode.Agent;
 
 public enum AgentAction { UseTool, Respond, Done }
 
-public class Agent(LlmClient llm, IReadOnlyList<ITool> tools)
+public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory)
 {
     private readonly AgentState _state = new();
 
@@ -16,7 +16,7 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools)
         {
             _state.IncrementStep();
 
-            var action = await llm.DecideAsync<AgentAction>(BuildDecidePrompt(goal));
+            var action = await llm.DecideAsync<AgentAction>(AgentPrompts.Decide(goal, _state, memory));
 
             if (action == AgentAction.UseTool)
                 await ExecuteToolStepAsync(goal, onEvent);
@@ -25,11 +25,13 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools)
             else if (action == AgentAction.Done)
                 _state.MarkDone();
         }
+
+        memory.Save();
     }
 
     private async Task ExecuteToolStepAsync(string goal, Action<AgentEvent> onEvent)
     {
-        var toolCall = await llm.RequestToolAsync(BuildToolPrompt(goal), tools);
+        var toolCall = await llm.RequestToolAsync(AgentPrompts.SelectTool(goal, _state, memory), tools);
 
         if (toolCall is null)
         {
@@ -54,36 +56,21 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools)
 
     private async Task RespondAsync(string goal, Action<AgentEvent> onEvent)
     {
-        var respondPrompt = BuildRespondPrompt(goal);
-        var response = await llm.GenerateAsync(respondPrompt);
+        var result = await llm.GenerateStructuredAsync<AgentResponse>(AgentPrompts.Respond(goal, _state, memory));
+
+        if (result is null)
+        {
+            onEvent(AgentEvent.Error("Failed to generate response."));
+            _state.MarkDone();
+            return;
+        }
+
+        if (result.SaveToMemory is not null)
+            memory.Add(result.SaveToMemory);
+
         _state.MarkDone();
-        onEvent(AgentEvent.Response(response));
+        onEvent(AgentEvent.Response(result.Reply));
     }
 
-    private string BuildDecidePrompt(string goal) =>
-        $"""
-         Goal: {goal}
-         {_state}
-
-         What should you do next?
-         - UseTool: use one of the available tools to make progress
-         - Respond: you have enough information to respond to the user
-         - Done: the task is fully complete and no response is needed
-         """;
-
-    private string BuildToolPrompt(string goal) =>
-        $"""
-         Goal: {goal}
-         {_state}
-
-         Which tool should you call next to make progress towards the goal?
-         """;
-
-    private string BuildRespondPrompt(string goal) =>
-        $"""
-         Goal: {goal}
-         {_state}
-
-         Based on the work done above, provide your final response to the user.
-         """;
+    private record AgentResponse(string Reply, string? SaveToMemory);
 }

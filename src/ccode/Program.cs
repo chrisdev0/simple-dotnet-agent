@@ -29,7 +29,10 @@ IReadOnlyList<ITool> tools =
     new SearchInFilesTool(),
 ];
 
-var agent = new Agent(llm, tools);
+var memory = new Memory();
+memory.Load();
+
+var agent = new Agent(llm, tools, memory);
 
 while (true)
 {

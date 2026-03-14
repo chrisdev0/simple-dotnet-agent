@@ -16,6 +16,6 @@ public class AgentState
         LastResult = null;
     }
 
-    public override string ToString() =>
+    public string GetContext() =>
         $"Step {Steps}. Last result: {LastResult ?? "none"}";
 }
