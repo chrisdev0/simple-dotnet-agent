@@ -1,3 +1,4 @@
+using ccode.Agent;
 using Microsoft.Extensions.AI;
 
 namespace ccode.Shared;
@@ -60,6 +61,25 @@ public class LlmClient(IChatClient chatClient, string systemPrompt)
             return result;
 
         return null;
+    }
+
+    public async Task<ToolCall?> RequestToolAsync(string prompt, IEnumerable<ITool> tools)
+    {
+        var toolList = tools.ToList();
+        var toolDescriptions = string.Join("\n", toolList.Select(t =>
+            $"- {t.Name}: {t.Description}\n" +
+            string.Join("\n", t.Parameters.Select(p =>
+                $"    {p.Name} ({(p.Required ? "required" : "optional")}): {p.Description}"))));
+
+        return await GenerateStructuredAsync<ToolCall>(
+            $"""
+             {prompt}
+
+             Available tools:
+             {toolDescriptions}
+
+             Respond with the name of the tool to call and its arguments.
+             """);
     }
 
     private record Decision(string Choice);
