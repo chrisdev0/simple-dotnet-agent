@@ -1,10 +1,11 @@
 using ccode.Shared;
+using ccode.Shared.Logging;
 
 namespace ccode.Agent;
 
 public enum AgentAction { UseTool, Respond, Done }
 
-public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory)
+public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory, AgentLogger logger)
 {
     private readonly AgentState _state = new();
 
@@ -49,7 +50,9 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory)
         var argsDisplay = string.Join(", ", toolCall.Arguments.Select(a => $"{a.Key}: {a.Value}"));
         onEvent(AgentEvent.ToolCall($"{tool.Name}({argsDisplay})"));
 
+        var timer = AgentLogger.StartTimer();
         var result = await tool.ExecuteAsync(toolCall.Arguments);
+        logger.LogToolCall(tool.Name, toolCall.Arguments, result, timer.Elapsed.TotalMilliseconds);
         _state.SetLastResult($"{tool.Name} → {result}");
         onEvent(AgentEvent.ToolResult(result));
     }
@@ -66,7 +69,10 @@ public class Agent(LlmClient llm, IReadOnlyList<ITool> tools, Memory memory)
         }
 
         if (result.SaveToMemory is not null)
+        {
             memory.Add(result.SaveToMemory);
+            logger.LogMemory("add", result.SaveToMemory);
+        }
 
         _state.MarkDone();
         onEvent(AgentEvent.Response(result.Reply));

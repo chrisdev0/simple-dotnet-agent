@@ -1,9 +1,10 @@
 using ccode.Agent;
+using ccode.Shared.Logging;
 using Microsoft.Extensions.AI;
 
 namespace ccode.Shared;
 
-public class LlmClient(IChatClient chatClient, string systemPrompt)
+public class LlmClient(IChatClient chatClient, string systemPrompt, AgentLogger logger)
 {
     public async Task<string> GenerateAsync(string prompt)
     {
@@ -13,7 +14,9 @@ public class LlmClient(IChatClient chatClient, string systemPrompt)
             new(ChatRole.User, prompt),
         ];
 
+        var timer = AgentLogger.StartTimer();
         var response = await chatClient.GetResponseAsync(messages);
+        logger.LogLlmCall(prompt, response.Text, timer.Elapsed.TotalMilliseconds);
         return response.Text;
     }
 
@@ -37,8 +40,11 @@ public class LlmClient(IChatClient chatClient, string systemPrompt)
 
         for (var attempt = 1; attempt <= 3; attempt++)
         {
+            var timer = AgentLogger.StartTimer();
             var response = await chatClient.GetResponseAsync(messages);
             var result = JsonHelper.TryDeserialize<T>(response.Text);
+            logger.LogLlmCall(structuredPrompt, response.Text, timer.Elapsed.TotalMilliseconds,
+                result is null ? "Failed to deserialize response" : null);
             if (result is not null)
                 return result;
         }
@@ -56,11 +62,12 @@ public class LlmClient(IChatClient chatClient, string systemPrompt)
              You must choose exactly one of the following options: {string.Join(", ", choices.Select(c => $"\"{c}\""))}
              """);
 
-        if (decision is null) return null;
-        if (Enum.TryParse<TAction>(decision.Choice, ignoreCase: true, out var result))
-            return result;
+        var selected = decision is not null && Enum.TryParse<TAction>(decision.Choice, ignoreCase: true, out var result)
+            ? result
+            : (TAction?)null;
 
-        return null;
+        logger.LogDecision(choices, selected?.ToString(), 0);
+        return selected;
     }
 
     public async Task<ToolCall?> RequestToolAsync(string prompt, IEnumerable<ITool> tools)

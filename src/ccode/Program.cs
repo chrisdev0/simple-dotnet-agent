@@ -1,20 +1,29 @@
 using ccode.Agent;
 using ccode.Agent.Tools;
 using ccode.Shared;
+using ccode.Shared.Logging;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
 using Spectre.Console;
 using System.Text;
+using System.Text.Json;
 
 Console.OutputEncoding = Encoding.UTF8;
 
 var systemPrompt = File.ReadAllText("system_prompt.txt");
+var loggerConfig = JsonSerializer.Deserialize<LoggerConfig>(File.ReadAllText("logger.json"),
+    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+
+var sinks = new List<ILogSink>();
+if (loggerConfig.FileSink) sinks.Add(new FileLogSink());
+if (loggerConfig.TuiSink) sinks.Add(new TuiLogSink());
+var logger = new AgentLogger(sinks);
 
 var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 IChatClient chatClient = openAiKey is not null
     ? new OpenAI.Chat.ChatClient("gpt-4o-mini", openAiKey).AsIChatClient()
     : new OllamaApiClient(new Uri("http://localhost:11434"), "qwen3.5:9b");
-var llm = new LlmClient(chatClient, systemPrompt);
+var llm = new LlmClient(chatClient, systemPrompt, logger);
 
 IReadOnlyList<ITool> tools =
 [
@@ -32,7 +41,7 @@ IReadOnlyList<ITool> tools =
 var memory = new Memory();
 memory.Load();
 
-var agent = new Agent(llm, tools, memory);
+var agent = new Agent(llm, tools, memory, logger);
 
 while (true)
 {
@@ -70,3 +79,5 @@ void RenderEvent(AgentEvent e)
             break;
     }
 }
+
+record LoggerConfig(bool FileSink, bool TuiSink);

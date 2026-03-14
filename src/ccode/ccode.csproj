@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Content Include="system_prompt.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="logger.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
